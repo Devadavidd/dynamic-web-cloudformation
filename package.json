@@ -1,0 +1,13 @@
+{
+  "name": "dynamic-website",
+  "version": "1.0.0",
+  "description": "Dynamic website using Node.js",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "mysql2": "^3.12.0"
+  }
+}
