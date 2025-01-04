@@ -33,6 +33,17 @@ Resources:
         - Key: Name
           Value: PrivateSubnet
 
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.3.0/24
+      AvailabilityZone: !Select [2, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: PrivateSubnet2
+
+
   # Internet Gateway and Attachment
   InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -104,7 +115,7 @@ Resources:
           yum install -y nodejs npm git
           mkdir /var/www
           cd /var/www
-          git clone https://github.com/your-repo/node-dynamic-website.git .
+          git clone https://github.com/Devadavidd/dynamic-web-cloudformation.
           npm install
           npm start
 
@@ -157,11 +168,10 @@ Resources:
   RDSInstance:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceClass: db.t2.micro
-      AllocatedStorage: 20
-      Engine: mysql
-      EngineVersion: "8.0"
-      MasterUsername: admin
+      DBInstanceClass: db.t3.micro
+      AllocatedStorage: 5
+      Engine: MySQL
+      MasterUsername: masteruser
       MasterUserPassword: adminpassword
       DBName: dynamicwebsite
       VPCSecurityGroups:
@@ -174,6 +184,7 @@ Resources:
       DBSubnetGroupDescription: "Private Subnets for RDS"
       SubnetIds:
         - !Ref PrivateSubnet
+        - !Ref PrivateSubnet2
 
   # Systems Manager Parameter Store
   DbHostParameter:
@@ -188,7 +199,7 @@ Resources:
     Properties:
       Name: "/db/user"
       Type: String
-      Value: "admin"
+      Value: "masteruser"
 
   DbPasswordParameter:
     Type: AWS::SSM::Parameter
