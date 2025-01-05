@@ -23,6 +23,18 @@ Resources:
         - Key: Name
           Value: PublicSubnet
 
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.4.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: PublicSubnet2
+
+
   PrivateSubnet:
     Type: AWS::EC2::Subnet
     Properties:
@@ -99,6 +111,11 @@ Resources:
           FromPort: 443
           ToPort: 443
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 0.0.0.0/0
+
 
   # EC2 Launch Configuration
   LaunchConfiguration:
@@ -108,16 +125,33 @@ Resources:
       SecurityGroups:
         - !Ref SecurityGroup
       ImageId: ami-0c02fb55956c7d316 # Amazon Linux 2 AMI
+      IamInstanceProfile: !Ref LabRoleInstanceProfile
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
-          yum update -y
-          yum install -y nodejs npm git
-          mkdir /var/www
+          export HOME=~
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+          source ~/.bashrc
+          nvm install 16
+          nvm use 16
+          
+          sudo mkdir /var/www
           cd /var/www
-          git clone https://github.com/Devadavidd/dynamic-web-cloudformation.
+          sudo chown -R ec2-user:ec2-user /var/www
+
+          sudo git clone https://github.com/Devadavidd/dynamic-web-cloudformation .          
+          
+          npm install -g npm@6
           npm install
           npm start
+
+  # IAM Role
+  LabRoleInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - LabRole
+
 
   # Auto Scaling Group
   AutoScalingGroup:
@@ -151,6 +185,7 @@ Resources:
       Scheme: internet-facing
       Subnets:
         - !Ref PublicSubnet
+        - !Ref PublicSubnet2
       SecurityGroups:
         - !Ref SecurityGroup
 

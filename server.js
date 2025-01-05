@@ -9,9 +9,7 @@ const port = 3000;
 // Configure AWS SDK
 AWS.config.update({
   region: "us-east-1",
-  accessKeyId: "ASIATO6BM46T7MMOUAYU",
-  secretAccessKey: "Q7Zwl6FZkPCdOnohK7pr8aV7wZfBr+XkwqoR20Ng",
-}); // Replace "your-region" with your AWS region
+});
 
 const ssm = new AWS.SSM();
 
@@ -36,6 +34,13 @@ async function getDbConfig() {
       const key = param.Name.split("/").pop(); // Extract the parameter name
       dbConfig[key] = param.Value;
     });
+
+    console.log(2222, {
+      host: dbConfig.host,
+      user: dbConfig.user,
+      password: dbConfig.password,
+      database: dbConfig.name,
+    })
 
     return {
       host: dbConfig.host,
@@ -82,6 +87,20 @@ app.get("/users", async (req, res) => {
 });
 
 // Start the server
-app.listen(port, () => {
+app.listen(port, async () => {
+  const dbConfig = await getDbConfig();
+  const connection = await mysql.createConnection(dbConfig);
+  await connection.execute(`
+    CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE
+    );
+`);
+
+  console.log('Database initialized');
+  await connection.end();
+
+
   console.log(`Server running at http://localhost:${port}`);
 });
