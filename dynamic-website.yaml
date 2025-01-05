@@ -115,8 +115,11 @@ Resources:
           FromPort: 3306
           ToPort: 3306
           CidrIp: 0.0.0.0/0
-
-
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          CidrIp:
+        
   # EC2 Launch Configuration
   LaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -129,6 +132,10 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
+          sudo yum update -y
+          sudo yum install git -y
+
+
           export HOME=~
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
           source ~/.bashrc
